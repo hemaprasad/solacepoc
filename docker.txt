@@ -1,0 +1,47 @@
+install software in image:::
+1. download base image
+2. load the docker image into local docker
+3. Run the docker image (docker run -it -d  centos:7.5.1804 /bin/bash)
+4. download require rpm from internet
+5. copy rpm into running docker container (docker cp jdk.rpm a71b885c6042:/)
+6. exec into the running docker container (docker exec -it a71b885c6042 /bin/bash)
+7. intall new downloaded rpm into the container (rpm -ivh jdk.rpm)
+8. exit from container (ctrl+d)
+9. commit the container change in local docker ( docker commit a71b885c6042 local/centos-jdk8)
+10. save the latest image in tar file (docker save local/centos-jdk8 >  /home/tibusr/centos-jdk8.tar)
+
+Loading docker image from tar file:
+docker load -i centos-jdk8.tar
+
+Docker file:
+FROM centos-jdk8-kerberos
+ADD /KafkaProducer67.jar KafkaProducer67.jar
+COPY krb5.conf /etc/krb5.conf
+COPY diplatform.keytab /diplatform.keytab
+COPY working_jass.conf /working_jass.conf
+COPY script.sh /script.sh
+RUN chmod -R 775 script.sh
+ENTRYPOINT ["sh","script.sh"]
+
+remove null named images from docker:::
+docker rmi $(docker images | grep "^<none>" | awk "{print $3}")
+
+Remove all stopped containers:::
+docker rm $(docker ps -a -q)
+
+
+rpm -qa|grep docker
+
+ kubeadm reset -f
+ kubeadm init --kubernetes-version=1.11.0
+ yum install docker-ce-17.12.1.ce-1.el7.centos.x86_64.rpm
+yum install kubernetes-cni-0.6.0-0.x86_64.rpm kubelet-1.11.0-0.x86_64.rpm kubectl-1.11.0-0.x86_64.rpm kubeadm-1.11.0-0.x86_64.rpm
+
+
+ docker run -d   --restart always   -v /etc/ssl/certs/:/etc/ssl/certs   -v /var/lib/etcd-cluster:/var/lib/etcd   -v /etc/ssl:/etc/ssl   -p 4001:4001   -p 2380:2380   -p 2379:2379   --name etcd gcr.io/google_containers/etcd-amd64:3.0.17   etcd --name=etcd0   --client-cert-auth --trusted-ca-file=/etc/ssl/certs/ca.pem   --cert-file=/etc/ssl/certs/member-etcd-01.pem   --key-file=/etc/ssl/certs/member-etcd-01-key.pem   --peer-trusted-ca-file=/etc/ssl/certs/ca.pem   --peer-cert-file=/etc/ssl/certs/member-etcd-01.pem   --peer-key-file=/etc/ssl/certs/member-etcd-01-key.pem   --advertise-client-urls=https://10.144.20.240:2379,https://10.144.20.240:4001   --listen-client-urls=https://0.0.0.0:2379,https://0.0.0.0:4001   --initial-advertise-peer-urls=https://10.144.20.240:2380   --listen-peer-urls=https://0.0.0.0:2380   --initial-cluster-token=poc9477af68bbee1b9ae037d6fd9e7efefd   --initial-cluster=etcd0=https://10.144.20.240:2380   --initial-cluster-state=new   --debug   --data-dir=/var/lib/etcd
+
+
+
+
+kubectl get svc -o jsonpath='{range .items[*]}{"{\""}{.metadata.name}{"\" , \""}{.spec.ports[0].nodePort}{"\"}"}{"\n"}{end}'
+
