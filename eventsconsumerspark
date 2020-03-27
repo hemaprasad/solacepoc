@@ -1,0 +1,392 @@
+package com.ril.dap;
+
+import java.io.IOException;
+import java.sql.Timestamp;
+import java.util.Date;
+
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.Function;
+import org.apache.spark.broadcast.Broadcast;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jio.coe.core.config.CoeConfig;
+import com.jio.coe.core.kafka.KafkaConsumerRealTime;
+import com.jio.coe.core.spark.SparkManager;
+import com.ril.dap.schema.datamodels.ConfigPayload;
+import com.ril.dap.schema.datamodels.LogRequest;
+import com.ril.dap.schema.datamodels.RechargePMCResponse;
+
+public class EventsConsumer<T> extends KafkaConsumerRealTime<T> implements CoeConfig {
+	PayloadProcessing payloadProcess = new PayloadProcessing();
+	JSONObject jsonObject = null;
+	JSONObject seqJsonObject = null;
+
+	public EventsConsumer() throws JsonParseException, JsonMappingException, IOException {
+		super((Class<T>) RechargePMCResponse.class);
+		// TODO Auto-generated constructor stub
+
+	}
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	@Override
+	public JavaRDD transform(JavaRDD<ConsumerRecord<String, String>> rdd) {
+		// TODO Auto-generated method stub
+		JavaRDD returnRdd = rdd.map(new Function<ConsumerRecord<String, String>, RechargePMCResponse>() {
+
+			private static final long serialVersionUID = 1L;
+			final Broadcast<Broadcast<JSONObject>> broadcastjsonObject = new JavaSparkContext(
+					SparkManager.getInstance().sparkContext()).broadcast(KafkaConsumerRealTime.broadcastjson);
+
+			public RechargePMCResponse call(ConsumerRecord<String, String> kafkaRecord) {
+				RechargePMCResponse recharge = new RechargePMCResponse();
+				ConfigPayload configPayload = new ConfigPayload();
+				ObjectMapper mapper = new ObjectMapper();
+				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+				LogRequest request = new LogRequest();
+				jsonObject = broadcastjsonObject.getValue().value();
+				try {
+					JSONObject json = new JSONObject(kafkaRecord.value());
+					request = mapper.readValue(json.toString(), LogRequest.class);
+					seqJsonObject = jsonObject.optJSONObject("sequence");
+					String componentName = request.getComponentID();
+					String interfaceID = request.getInterfaceID();
+					String eventType = request.getEventType();
+					String seqString = null;
+					Integer sequencenum = 0;
+					String processType = request.getProcessType();
+					String completed = "COMPLETED";
+					String inprogress = "INPROGRESS";
+					String failed = "FAILED";
+					String cancelled = "CANCELLED";
+
+						try {
+							seqString = seqJsonObject.getString(componentName + "_" + interfaceID + "_" + processType+"_"+eventType+"_"+request.getTargetInterfaceID());
+							sequencenum = Integer.valueOf(seqString.substring(0, 2));
+						} catch (JSONException e) {
+							sequencenum = 0;
+						}
+						
+						
+						if (sequencenum>0) {
+						String dashboard = seqString.substring(3);
+						String status = request.getStatus();
+						configPayload = mapper.readValue(jsonObject.getJSONObject(dashboard).toString(),
+								ConfigPayload.class);
+						if(configPayload.getStatusUpdateSeq() != null && configPayload.getStatusUpdateSeq()==sequencenum && !(request.getReceivedPayload().contains(configPayload.getCallback()))) {
+							sequencenum = 0;
+						}
+						
+						if (configPayload.getRequiredSeq().contains(sequencenum)
+								|| (sequencenum>0 && status.equals(failed))) {
+							String correlationid = request.getCorrelationID();
+							recharge.setDashboard(dashboard);
+							recharge.setSequence(sequencenum);
+							recharge.setReferenceno(request.getTransactionID());
+							if (correlationid.length()<=20) {
+								recharge.setCorrelationid(request.getTransactionID()
+										+ correlationid);
+							} else {
+								recharge.setCorrelationid(request.getTransactionID()+correlationid.substring(0, 20));
+							}
+							if (configPayload.getLogFieldsCount() > 0) {
+								JSONObject jsonObject = new JSONObject(kafkaRecord.value().toString());
+
+								try {
+									recharge.setStr0(jsonObject.getString(configPayload.getStr0()));
+								} catch (JSONException e) {
+									recharge.setStr0(null);
+								}
+								if (configPayload.getLogFieldsCount() > 1) {
+									try {
+										recharge.setStr1(jsonObject.getString(configPayload.getStr1()));
+									} catch (JSONException e) {
+										recharge.setStr1(null);
+									}
+									
+									if (configPayload.getLogFieldsCount() > 2) {
+										try {
+											recharge.setStr2(jsonObject.getString(configPayload.getStr2()));
+										} catch (JSONException e) {
+											recharge.setStr2(null);
+										}
+									}
+								}
+							}
+							if((configPayload.getPayloadchannelid().equals(true))) {
+								if (configPayload.getParsePayloadType().equals("json")) {
+									recharge.setChannel(payloadProcess.getParseKey(request.getReceivedPayload(), configPayload.getChannelidField(),configPayload.getServiceidFields()));
+								}else {
+									recharge.setChannel(payloadProcess.getXmlKey(request.getReceivedPayload(), configPayload.getChannelidField(),configPayload.getServiceidFields()));
+								}
+							}else {
+								recharge.setChannel(request.getChannelID());
+							}
+
+							recharge.setErrorcode(request.getErrorCode());
+							
+							recharge.setReplyqueue(request.getReplyQueue());
+
+							recharge.setInterfaceid(interfaceID);
+							recharge.setEventtype(eventType);
+							if(configPayload.getEventTypeSeq()!=null && configPayload.getEventTypeSeq()==sequencenum) {
+								if (configPayload.getParsePayloadType().equals("json")) {
+									recharge.setEventtype(eventType+"_"+payloadProcess.getParseKey(request.getReceivedPayload(), configPayload.getEventTypeField(),configPayload.getServiceidFields()));
+								}else {
+									recharge.setEventtype(eventType+"_"+payloadProcess.getXmlKey(request.getReceivedPayload(), configPayload.getEventTypeField(),configPayload.getServiceidFields()));
+								}
+							}
+							recharge.setReceivedlogmessage(request.getReceivedLogMessage());
+							
+							recharge.setReceivedpayload(request.getReceivedPayload());
+							
+							recharge.setProcessedlogmessage(request.getProcessedLogMessage());
+							recharge.setProcessedpayload(request.getProcessedPayload());
+							recharge.setStacktrace(request.getStackTrace());
+
+							Date processedtimestamp = (Date) request.getProcessedTimeStamp().toGregorianCalendar()
+									.getTime();
+							recharge.setProcesstimestamp(new Timestamp(processedtimestamp.getTime()));
+							Date rectimestamp = (Date) request.getReceivedTimeStamp().toGregorianCalendar().getTime();
+							recharge.setReceivedtimestamp(new Timestamp(rectimestamp.getTime()));
+							recharge.setProcessdate(request.getProcessedTimeStamp().toString().substring(0, 10));
+							if (sequencenum <= configPayload.getParseSeq()) {
+								String payload = request.getReceivedPayload();
+								if (configPayload.getParsePayloadType().equals("json")) {
+									for (int j = 1; j <= configPayload.getPayloadFieldsCount(); j++) {
+										switch (j) {
+										case 1:
+											recharge.setPstr0(
+													payloadProcess.getParseKey(payload, configPayload.getPstr0(),configPayload.getServiceidFields()));
+											break;
+										case 2:
+
+											recharge.setPstr1(
+													payloadProcess.getParseKey(payload, configPayload.getPstr1(),configPayload.getServiceidFields()));
+											break;
+										case 3:
+											recharge.setPstr2(
+													payloadProcess.getParseKey(payload, configPayload.getPstr2(),configPayload.getServiceidFields()));
+											break;
+										case 4:
+											recharge.setPstr3(
+													payloadProcess.getParseKey(payload, configPayload.getPstr3(),configPayload.getServiceidFields()));
+											break;
+										case 5:
+											recharge.setPstr4(
+													payloadProcess.getParseKey(payload, configPayload.getPstr4(),configPayload.getServiceidFields()));
+											break;
+										case 6:
+											recharge.setPstr5(
+													payloadProcess.getParseKey(payload, configPayload.getPstr5(),configPayload.getServiceidFields()));
+											break;
+										case 7:
+											recharge.setPstr6(
+													payloadProcess.getParseKey(payload, configPayload.getPstr6(),configPayload.getServiceidFields()));
+											break;
+										case 8:
+											recharge.setPstr7(
+													payloadProcess.getParseKey(payload, configPayload.getPstr7(),configPayload.getServiceidFields()));
+											break;
+										case 9:
+											recharge.setPstr8(
+													payloadProcess.getParseKey(payload, configPayload.getPstr8(),configPayload.getServiceidFields()));
+											break;
+										case 10:
+											recharge.setPstr9(
+													payloadProcess.getParseKey(payload, configPayload.getPstr9(),configPayload.getServiceidFields()));
+											break;
+										case 11:
+											recharge.setPstr10(
+													payloadProcess.getParseKey(payload, configPayload.getPstr10(),configPayload.getServiceidFields()));
+											break;
+										case 12:
+											recharge.setPstr11(
+													payloadProcess.getParseKey(payload, configPayload.getPstr11(),configPayload.getServiceidFields()));
+											break;
+										default:
+											//
+											break;
+										}
+									}
+								} else {
+									System.out.println("in xml parsing");
+
+									for (int j = 1; j <= configPayload.getPayloadFieldsCount(); j++) {
+										switch (j) {
+										case 1:
+											recharge.setPstr0(
+													payloadProcess.getXmlKey(payload, configPayload.getPstr0(),configPayload.getServiceidFields()));
+											break;
+										case 2:
+
+											recharge.setPstr1(
+													payloadProcess.getXmlKey(payload, configPayload.getPstr1(),configPayload.getServiceidFields()));
+											break;
+										case 3:
+											recharge.setPstr2(
+													payloadProcess.getXmlKey(payload, configPayload.getPstr2(),configPayload.getServiceidFields()));
+											break;
+										case 4:
+											recharge.setPstr3(
+													payloadProcess.getXmlKey(payload, configPayload.getPstr3(),configPayload.getServiceidFields()));
+											break;
+										case 5:
+											recharge.setPstr4(
+													payloadProcess.getXmlKey(payload, configPayload.getPstr4(),configPayload.getServiceidFields()));
+											break;
+										case 6:
+											recharge.setPstr5(
+													payloadProcess.getXmlKey(payload, configPayload.getPstr5(),configPayload.getServiceidFields()));
+											break;
+										case 7:
+											recharge.setPstr6(
+													payloadProcess.getXmlKey(payload, configPayload.getPstr6(),configPayload.getServiceidFields()));
+											break;
+										case 8:
+											recharge.setPstr7(
+													payloadProcess.getXmlKey(payload, configPayload.getPstr7(),configPayload.getServiceidFields()));
+											break;
+										case 9:
+											recharge.setPstr8(
+													payloadProcess.getXmlKey(payload, configPayload.getPstr8(),configPayload.getServiceidFields()));
+											break;
+										case 10:
+											recharge.setPstr9(
+													payloadProcess.getXmlKey(payload, configPayload.getPstr9(),configPayload.getServiceidFields()));
+											break;
+										case 11:
+											recharge.setPstr10(
+													payloadProcess.getXmlKey(payload, configPayload.getPstr10(),configPayload.getServiceidFields()));
+											break;
+										case 12:
+											recharge.setPstr11(
+													payloadProcess.getXmlKey(payload, configPayload.getPstr11(),configPayload.getServiceidFields()));
+											break;
+										default:
+											//
+											break;
+										}
+									}
+
+								}
+							}
+							
+							 if(request.getProcessType().contains("Recharge") && configPayload.getStatusUpdateSeq() == sequencenum) {
+									if(configPayload.getStatusUpdateValues().contains(payloadProcess.getParseKey(request.getReceivedPayload(), configPayload.getStatusUpdateField(),configPayload.getServiceidFields()))) {
+										
+											if(!(status.equals(failed))) {
+										recharge.setProcesstimestamp(new Timestamp(processedtimestamp.getTime()-31536000000L));
+										recharge.setProcessstate(completed);
+											}else {
+												recharge.setProcessstate(failed);
+											}
+									}
+										else if(request.getReceivedPayload().contains(configPayload.getCancelVal())) {
+											if(!(status.equals(failed))) {
+												recharge.setProcessstate(cancelled);
+													}else {
+														recharge.setProcessstate(failed);
+													}
+										}
+									
+									else {
+										recharge.setProcesstimestamp(new Timestamp(processedtimestamp.getTime()-31536000000L));
+										if(!(status.equals(failed))) {
+											recharge.setProcessstate(completed);
+												}else {
+													recharge.setProcessstate(failed);
+												}
+									}
+									
+									}
+
+							 else if ((status != null && status.equals(failed))) {
+								if (request.getProcessType().contains("Recharge") && configPayload.getCancelSeq() != null
+										&& sequencenum == configPayload.getCancelSeq() && request.getReceivedPayload() != null) {
+									if (request.getReceivedPayload().contains(configPayload.getCancelVal())) {
+										
+											recharge.setProcessstate(cancelled);
+										
+
+									} else {
+										
+											recharge.setProcessstate(failed);
+										
+									}
+								}
+																
+								else {
+								recharge.setProcessstate(failed);
+								}
+							} 
+							
+														
+							else if (configPayload.getLastSeq().contains(sequencenum)) {
+								recharge.setProcessstate(completed);
+							} else {
+								recharge.setProcessstate(inprogress);
+							}
+
+						}
+					}
+					
+
+				} catch (Exception e) {
+					e.printStackTrace();
+					System.out.println("Exception "+e.toString()+"  request "+request);
+				}
+				return recharge;
+
+			}
+		});
+		JavaRDD finalresp = returnRdd.filter(new Function<RechargePMCResponse, Boolean>() {
+			public Boolean call(RechargePMCResponse v1) throws Exception {
+				return v1.getReferenceno() != null;
+			}
+		});
+		return finalresp;
+	}
+
+	public static void main(String[] args) throws JSONException, JsonParseException, JsonMappingException, IOException {
+		EventsConsumer process = new EventsConsumer();
+
+		String hdfsurl = args[0];
+		String hdfsuser = args[1];
+		String hdfspath = args[2];
+		String hdfspropertiesfilename = args[3];
+
+		process.start(hdfsurl, hdfsuser, hdfspath, hdfspropertiesfilename, process.getStakeHolder(),
+				process.getUsecase());
+	}
+
+	public String getStakeHolder() {
+		// TODO Auto-generated method stub
+		return "diplatform";
+	}
+
+	/*
+	 * public String getStakeHolderPropname() { // TODO Auto-generated method stub
+	 * return "coe_spark_job_client_diplatform_log.properties"; }
+	 */
+	public String getUsecase() {
+		// TODO Auto-generated method stub
+		return "logs";
+	}
+
+	public String getStakeHolderPropname() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+}
