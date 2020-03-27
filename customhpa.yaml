@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: stsecret
+  namespace: monitoring
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJuZXh1cy5yamlsLnJpbC5jb206NTAwMCI6eyJ1c2VybmFtZSI6Imppb2RpZ2l0YWxhcGkiLCJwYXNzd29yZCI6Imppb2RpZ2l0YWxhcGkiLCJlbWFpbCI6ImhlbWFwcmFzYWQua29jaGVybGxhQHJpbC5jb20iLCJhdXRoIjoiYW1sdlpHbG5hWFJoYkdGd2FUcHFhVzlrYVdkcGRHRnNZWEJwIn19fQ==
+type: kubernetes.io/dockerconfigjson
+[root@JMNGD1BAQ10V01 prometheus]# cat hpa.yaml
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: digitalapi-cci-app
+  namespace: jio-dap-shs
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: digitalapi-cci-app
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+  - type: Pods
+    pods:
+      metricName: tomcat_threads_per_pod_threads
+      targetAverageValue: 200
