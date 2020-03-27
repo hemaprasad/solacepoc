@@ -1,0 +1,239 @@
+JEP REPLICA -> https://nvmbdrpv000411.jiolabs.com:8443/#/login 
+
+TC_replenish_011A
+
+select  t3.referenceno as referenceno, t3.str1 as transrefno, t3.dashboard as processtype, t2.processstate as processstate, t2.processtimestamp as processtimestamp, t3.pstr1 as customerid, t3.pstr0 as circle, t3.channel as channel, t3.pstr2 as paymentmode, t3.pstr5 as transactiontimestamp from (select correlationid,max(processtimestamp) as time from st_pmcevents where cast(processdate as date) = cast('2019-04-02' as date) and referenceno LIKE 'ORN1115251170%' and dashboard LIKE 'recharge%' group by correlationid) t1, (select * from st_pmcevents where cast(processdate as date) = cast('2019-04-02' as date) and referenceno LIKE 'ORN1115251170%' and dashboard LIKE 'recharge%') t2,(select * from st_pmcevents where cast(processdate as date) = cast('2019-04-02' as date) and sequence<=3  and referenceno LIKE 'ORN1115251170%' and dashboard LIKE 'recharge%') t3, (select correlationid,max(processtimestamp) as time from st_pmcevents where cast(processdate as date) = cast('2019-04-02' as date) and referenceno LIKE 'ORN1115251170%' and dashboard LIKE 'recharge%' and sequence<=3 group by correlationid) t4, (select DISTINCT correlationid from st_pmcevents where cast(processdate as date) = cast('2019-04-02' as date) and cast(processtimestamp as timestamp) between cast('2019-04-02 00:00:00.000' as timestamp) and cast('2019-04-02 23:59:59.999' as timestamp)  and sequence<=2) t5 where t1.correlationid=t5.correlationid   and t3.correlationid=t1.correlationid and t4.correlationid=t1.correlationid and t2.correlationid=t1.correlationid and t1.time=t2.processtimestamp and t4.time=t3.processtimestamp LIMIT 50
+
+select t2.receivedpayload as payload, t2.dashboard as dashboard, t2.eventtype as processname, t2.receivedtimestamp as activitytimestamp,t2.processstate as activitystate, t2.errorcode as errorcode, t2.sequence as sequence, t2.referenceno as transactionid from (select eventtype, max(receivedtimestamp) as processedtimestamp from st_pmcevents where dashboard LIKE 'recharge%' and referenceno='REG01Y0097A'  and str1='1' group by eventtype) t1, (select * from st_pmcevents where dashboard LIKE 'recharge%' and referenceno='REG01Y0097A'  and str1='1') t2 where t1.eventtype=t2.eventtype and t1.processedtimestamp=t2.receivedtimestamp order by sequence
+
+
+ select channel,dashboard,receivedpayload,interfaceid from  st_pmcevents where dashboard LIKE 'recharge%' and referenceno='KARAN0000022' and eventtype='ReplenishBalance' and cast(receivedtimestamp as timestamp)=cast('2019-03-19 13:13:20.327' as timestamp) and str1='1'
+
+
+select t2.receivedpayload as payload, t2.dashboard as dashboard, t2.eventtype as processname, t2.receivedtimestamp as activitytimestamp,t2.processstate as activitystate, t2.errorcode as errorcode, t2.sequence as sequence, t2.referenceno as transactionid from (select eventtype, max(processtimestamp) as processedtimestamp from st_pmcevents where dashboard LIKE 'recharge%' and referenceno='TC_replenish_067' and str1='lmn111' group by eventtype) t1, (select * from st_pmcevents where dashboard LIKE 'recharge%' and referenceno='TC_replenish_067' and str1='lmn111') t2 where t1.eventtype=t2.eventtype and t1.processedtimestamp=t2.processtimestamp order by sequence
+
+
+select t3.channel as criteria,t2.processstate as status, count(2) as sum from (select correlationid,max(processtimestamp) as time from st_pmcevents where dashboard LIKE 'recharge%' and cast(processdate as date) between cast('2019-02-21' as date) and cast('2019-02-27' as date)  group by correlationid) t1, (select * from st_pmcevents where dashboard LIKE 'recharge%' and cast(processdate as date) between cast('2019-02-21' as date) and cast('2019-02-27' as date) ) t2, (select distinct correlationid, channel,processtimestamp from st_pmcevents where dashboard LIKE 'recharge%' and cast(processdate as date) between cast('2019-02-21' as date) and cast('2019-02-27' as date)  and sequence=1) t3, (select DISTINCT correlationid from st_pmcevents where cast(processdate as date) between cast('2019-02-21' as date) and cast('2019-02-27' as date)  and cast(processtimestamp as timestamp) between cast('2019-02-21 00:00:00.000' as timestamp) and cast('2019-02-27 23:59:59.999' as timestamp)  and sequence<=2) t4, (select correlationid,max(processtimestamp) as time from st_pmcevents where cast(processdate as date) between cast('2019-02-21' as date) and cast('2019-02-27' as date)  and sequence=1 group by correlationid) t5 where  t1.correlationid=t4.correlationid and t1.correlationid=t2.correlationid  and t1.correlationid=t3.correlationid and t1.correlationid=t5.correlationid and t3.processtimestamp=t5.time and cast(t1.time as timestamp)=cast(t2.processtimestamp as timestamp) group by t3.channel,t2.processstate
+
+
+select t2.dashboard as dashboard, t2.eventtype as processname, t2.receivedtimestamp as activitytimestamp,t2.processstate as activitystate, t2.errorcode as errorcode, t2.sequence as sequence, t2.referenceno as transactionid from (select eventtype, max(processtimestamp) as processedtimestamp from st_pmcevents where dashboard LIKE 'recharge%' and referenceno='BR000000349X' and str1='BR000000349X' group by eventtype) t1, (select * from st_pmcevents where dashboard LIKE 'recharge%' and referenceno='BR000000349X' and str1='BR000000349X') t2 where t1.eventtype=t2.eventtype and t1.processedtimestamp=t2.processtimestamp order by sequence
+
+
+
+select t3.channel as criteria,t2.processstate as status, count(2) as sum from (select correlationid,max(processtimestamp) as time from st_pmcevents where dashboard LIKE 'recharge%' and cast(processdate as date) = cast('2019-02-18' as date) group by correlationid) t1, (select * from st_pmcevents where dashboard LIKE 'recharge%' and cast(processdate as date) = cast('2019-02-18' as date)) t2, (select distinct correlationid, channel,processtimestamp from st_pmcevents where dashboard LIKE 'recharge%' and cast(processdate as date) = cast('2019-02-18' as date) and sequence=1) t3, (select DISTINCT correlationid from st_pmcevents where cast(processdate as date) = cast('2019-02-18' as date) and cast(processtimestamp as timestamp) between cast('2019-02-18 00:00:00.000' as timestamp) and cast('2019-02-18 23:59:59.999' as timestamp)  and sequence<=2) t4, (select correlationid,max(processtimestamp) as time from st_pmcevents where cast(processdate as date) = cast('2019-02-18' as date) and sequence=1 group by correlationid) t5 where  t1.correlationid=t4.correlationid and t1.correlationid=t2.correlationid  and t1.correlationid=t3.correlationid and t1.correlationid=t5.correlationid and t3.processtimestamp=t5.time and cast(t1.time as timestamp)=cast(t2.processtimestamp as timestamp) group by t3.channel,t2.processstate
+
+
+BGF00000047E
+
+
+select  t3.referenceno as referenceno, t3.str1 as transrefno, t3.dashboard as processtype, t2.processstate as processstate, t2.processtimestamp as processtimestamp, t3.pstr1 as customerid, t3.pstr0 as circle, t3.channel as channel, t3.pstr2 as paymentmode, t3.pstr5 as transactiontimestamp from (select correlationid,max(processtimestamp) as time from st_pmcevents where cast(processdate as date) = cast('2019-02-18' as date) and referenceno LIKE 'BRC00022WSXE%' and dashboard LIKE 'recharge%' group by correlationid) t1, (select * from st_pmcevents where cast(processdate as date) = cast('2019-02-18' as date) and referenceno LIKE 'BRC00022WSXE%' and dashboard LIKE 'recharge%') t2,(select * from st_pmcevents where cast(processdate as date) = cast('2019-02-18' as date) and sequence<=3  and referenceno LIKE 'BRC00022WSXE%' and dashboard LIKE 'recharge%') t3, (select correlationid,max(processtimestamp) as time from st_pmcevents where cast(processdate as date) = cast('2019-02-18' as date) and referenceno LIKE 'BRC00022WSXE%' and dashboard LIKE 'recharge%' and sequence<=3 group by correlationid) t4, (select DISTINCT correlationid from st_pmcevents where cast(processdate as date) = cast('2019-02-18' as date) and cast(processtimestamp as timestamp) between cast('2019-02-18 00:00:00.000' as timestamp) and cast('2019-02-18 23:59:59.999' as timestamp)  and sequence<=2) t5 where t1.correlationid=t5.correlationid   and t3.correlationid=t1.correlationid and t4.correlationid=t1.correlationid and t2.correlationid=t1.correlationid and t1.time=t2.processtimestamp and t4.time=t3.processtimestamp LIMIT 50
+
+
+use diplatform;
+drop table if exists st_pmcevents;
+create table st_pmcevents(channel STRING,correlationid STRING, dashboard STRING, errorcode STRING, interfaceid STRING,processedlogmessage STRING, processedpayload STRING, processstate STRING,processtimestamp TIMESTAMP, pstr0 STRING, pstr1 STRING, pstr2 STRING, pstr3 STRING, pstr4 STRING, pstr5 STRING, pstr6 STRING, pstr7 STRING, pstr8 STRING, pstr9 STRING,pstr10 STRING, pstr11 STRING, receivedlogmessage STRING, receivedpayload STRING, receivedtimestamp TIMESTAMP, referenceno STRING, replyqueue STRING, sequence INT,stacktrace STRING, str0 STRING,str1 STRING, str2 STRING) 
+PARTITIONED BY(processdate STRING)
+row format delimited fields terminated by ','
+stored as orc
+LOCATION '/user/diplatform/st_pmcevents';
+
+
+
+
+select  t3.referenceno as referenceno, t3.str1 as transrefno, t2.processstate as processstate, t2.processtimestamp as processtimestamp, t3.pstr1 as customerid, t3.pstr0 as circle, t3.channel as channel, t3.pstr2 as paymentmode, t3.pstr5 as transactiontimestamp from (select correlationid,max(processtimestamp) as time from st_pmcevents where cast(processtimestamp as timestamp) between cast('2019-01-09 00:00:00.000' as timestamp) and cast('2019-01-09 23:59:59.999' as timestamp)  and referenceno LIKE 'TPAGEP018651%' and dashboard LIKE 'recharge%' group by correlationid) t1, (select * from st_pmcevents where cast(processtimestamp as timestamp) between cast('2019-01-09 00:00:00.000' as timestamp) and cast('2019-01-09 23:59:59.999' as timestamp)  and referenceno LIKE 'TPAGEP018651%' and dashboard LIKE 'recharge%') t2,(select * from st_pmcevents where cast(processtimestamp as timestamp) between cast('2019-01-09 00:00:00.000' as timestamp) and cast('2019-01-09 23:59:59.999' as timestamp) and sequence=3  and referenceno LIKE 'TPAGEP018651%' and dashboard LIKE 'recharge%') t3, (select correlationid,max(processtimestamp) as time from st_pmcevents where cast(processtimestamp as timestamp) between cast('2019-01-09 00:00:00.000' as timestamp) and cast('2019-01-09 23:59:59.999' as timestamp)  and referenceno LIKE 'TPAGEP018651%' and dashboard LIKE 'recharge%' and sequence=3 group by correlationid) t4 where t1.correlationid=t2.correlationid and t1.time=t2.processtimestamp  and t3.correlationid=t1.correlationid and t4.time=t3.processtimestamp LIMIT 50
+
+
+select stacktrace,errorcode,processedlogmessage,receivedlogmessage,receivedpayload,processedpayload from st_pmcevents where dashboard LIKE 'recharge%' and referenceno='STEJEP00142' and interfaceid='RefillManagement' and processstate in ('INPROGRESS','COMPLETED') and cast(receivedtimestamp as timestamp)=cast('2019-01-03 17:03:00.571' as timestamp)
+
+
+select stacktrace,errorcode,processedlogmessage,receivedlogmessage,receivedpayload,processedpayload from st_pmcevents where dashboard LIKE 'recharge%' and referenceno='BR00001Z6Z46' and interfaceid='ReplenishBalance' and processstate in '('INPROGRESS','COMPLETED')' and cast(receivedtimestamp as timestamp)=cast('2018-12-31 14:08:39.821' as timestamp)
+
+
+ select stacktrace,errorcode,processedlogmessage,receivedlogmessage,receivedpayload,processedpayload from st_pmcevents where dashboard LIKE 'recharge%' and referenceno='STEGEP00137' and interfaceid='EnrichReplenishBalance' and processstate='COMPLETED' and cast(receivedtimestamp as timestamp)=cast('2018-12-28 16:08:41.711' as timestamp)
+
+
+
+select stacktrace,errorcode,processedlogmessage,receivedlogmessage,receivedpayload,processedpayload from st_logevents where dashboard LIKE 'recharge%' and transactionid='PMCJEPST036A' and eventtype='ReplenishBalance' and status='SUCCESS' and cast(receivedtimestamp as timestamp)=cast('2018-12-26 16:22:57.36' as timestamp)
+
+
+select  t3.referenceno as referenceno, t2.processstate as processstate, t2.processtimestamp as processtimestamp, t3.pstr1 as customerid, t3.pstr0 as circle, t3.channel as channel, t3.pstr2 as paymentmode, t3.pstr5 as transactiontimestamp from (select correlationid,max(receivedtimestamp) as time from st_pmcevents where cast(receivedtimestamp as timestamp) between cast('2018-12-24 00:00:00.000' as timestamp) and cast('2018-12-24 23:59:59.999' as timestamp)  and dashboard LIKE 'recharge%' group by correlationid) t1, (select referenceno, processstate,receivedtimestamp, processtimestamp,correlationid from st_pmcevents where cast(receivedtimestamp as timestamp) between cast('2018-12-24 00:00:00.000' as timestamp) and cast('2018-12-24 23:59:59.999' as timestamp)  and dashboard LIKE 'recharge%') t2,(select * from st_pmcevents where cast(receivedtimestamp as timestamp) between cast('2018-12-24 00:00:00.000' as timestamp) and cast('2018-12-24 23:59:59.999' as timestamp) and sequence=3  and dashboard LIKE 'recharge%') t3 where t1.correlationid=t2.correlationid and t1.time=t2.receivedtimestamp  and t3.correlationid=t1.correlationid LIMIT 50
+
+
+
+
+[select  t2.interfaceid as activityname, t2.str0 as processname, t2.processtimestamp as processtimestamp, t2.referenceno as referenceno, t2.errorcode as errorcode from (select correlationid,max(processtimestamp) as time from st_pmcevents where dashboard like 'recharge%' and cast(processtimestamp  as timestamp) between cast('2018-11-29 00:00:00.000' as timestamp) and cast('2018-11-29 23:59:59.999' timestamp)  and interfaceid='EnrichReplenishBalance' and errorcode='RUNTIME' group by correlationid) t1, (select * from st_pmcevents where dashboard like 'recharge%' and  cast(processtimestamp as timestamp) between cast('2018-11-29 00:00:00.000' as timestamp) and cast('2018-11-29 23:59:59.999' as timestamp) and processstate='FAILED'  and interfaceid='EnrichReplenishBalance' and errorcode='RUNTIME') t2 where t1.correlationid=t2.correlationid and t1.time=t2.processtimestamp LIMIT 50];
+
+
+
+
+.select t3.channel as criteria,t2.processstate as status, count(2) as sum from (select correlationid,max(processtimestamp) as time from st_pmcevents where dashboard LIKE 'recharge%' and cast(processtimestamp as timestamp) between cast('2018-11-27 00:00:00.000' as timestamp) and cast('2018-11-27 23:59:59.999' as timestamp) group by correlationid) t1, (select referenceno, processstate, processtimestamp,correlationid from st_pmcevents where dashboard LIKE 'recharge%' and cast(processtimestamp as timestamp) between cast('2018-11-27 00:00:00.000' as timestamp) and cast('2018-11-27 23:59:59.999' as timestamp)) t2, (select channel, referenceno,correlationid from st_pmcevents where dashboard LIKE 'recharge%' and cast(processtimestamp as timestamp) between cast('2018-11-27 00:00:00.000' as timestamp) and cast('2018-11-27 23:59:59.999' as timestamp) and sequence=1) t3 where t1.correlationid=t2.correlationid and t1.time=t2.processtimestamp  and t3.correlationid=t1.correlationid group by t3.channel,t2.processstate
+
+select t3.channel as criteria,t2.processstate as status, count(2) as sum from (select correlationid,max(processtimestamp) as time from st_pmcevents where dashboard LIKE 'recharge%' and unix_timestamp(processtimestamp, 'yyyy-MM-dd HH:mm:ss.SSS') between unix_timestamp('2018-11-25 18:40:47.406','yyyy-MM-dd HH:mm:ss.SSS') and unix_timestamp('2018-11-27 18:50:47.406','yyyy-MM-dd HH:mm:ss.SSS') group by correlationid) t1, (select referenceno, processstate, processtimestamp,correlationid from st_pmcevents where dashboard LIKE 'recharge%' and unix_timestamp(processtimestamp, 'yyyy-MM-dd HH:mm:ss.SSS') between unix_timestamp('2018-11-25 18:40:47.406','yyyy-MM-dd HH:mm:ss.SSS') and unix_timestamp('2018-11-27 18:50:47.406','yyyy-MM-dd HH:mm:ss.SSS')) t2, (select channel, referenceno,correlationid from st_pmcevents where dashboard LIKE 'recharge%' and unix_timestamp(processtimestamp, 'yyyy-MM-dd HH:mm:ss.SSS') between unix_timestamp('2018-11-25 18:40:47.406','yyyy-MM-dd HH:mm:ss.SSS') and unix_timestamp('2018-11-27 18:50:47.406','yyyy-MM-dd HH:mm:ss.SSS') and sequence=1) t3 where t1.correlationid=t2.correlationid and t1.time=t2.processtimestamp  and t3.correlationid=t1.correlationid group by t3.channel,t2.processstate
+
+select t2.eventtype as processname, t2.processedtimestamp as activitytimestamp,t2.status as activitystate, t2.errorcode as errorcode, t2.sequence as sequence, t2.correlationid as correlationid, t2.transactionid as transactionid from (select max(processedtimestamp) as time from st_exceptionevents where dashboard LIKE 'recharge%' and transactionid='BR186230136' and unix_timestamp(processedtimestamp, 'yyyy-MM-dd HH:mm:ss.SSS') > unix_timestamp('2018-10-25 20:38:51.122', 'yyyy-MM-dd HH:mm:ss.SSS') ) t1, (select * from st_exceptionevents where dashboard LIKE 'recharge%' and transactionid='BR186230136'and unix_timestamp(processedtimestamp, 'yyyy-MM-dd HH:mm:ss.SSS') > unix_timestamp('2018-10-25 20:38:51.122', 'yyyy-MM-dd HH:mm:ss.SSS')) t2 where t1.time=t2.processedtimestamp
+
+/usr/hdp/current/kafka-broker/bin/kafka-console-consumer.sh --broker-list nvmbddvv008834.bss.dev.jio.com:6667,nvmbddvv008835.bss.dev.jio.com:6667,nvmbddvv008836.bss.dev.jio.com:6667 --topic dap-st-recharge-exception --security-protocol PLAINTEXTSASL
+
+ bin/kafka-topics.sh --describe --zookeeper nvmbddvv008834.bss.dev.jio.com:2181,nvmbddvv008835.bss.dev.jio.com:2181,nvmbddvv008836.bss.dev.jio.com:2181 --topic dap-st-recharge-exception
+ 
+ sum(rate(http_server_requests_seconds_count{app="digitalapi-identifiermanagement-app",kubernetes_namespace='jio-dap-bnp-pos',uri="root"}[5s]))
+ 
+ 10.63.113.105
+Varun Talus 4:19 PM: 
+10.63.116.61
+
+portal.office.com
+
+
+/usr/hdp/current/kafka-broker/bin/kafka-console-consumer.sh --bootstrap-server nvmbddvv008834.bss.dev.jio.com:6667,nvmbddvv008835.bss.dev.jio.com:6667,nvmbddvv008836.bss.dev.jio.com:6667 --topic dap-replica-recharge-log --from-beginning --security-protocol SASL_PLAINTEXT
+
+export KAFKA_OPTS="-Djava.security.auth.login.config=/home/dev_jep_diplatform/log/working_jass.conf"
+
+bin/kafka-topics.sh --describe --bootstrap-server localhost:9092 --topic my-replicated-topic
+
+/usr/hdp/current/kafka-broker/bin/kafka-topics.sh --describe --bootstrap-server nvmbddvv008834.bss.dev.jio.com:6667,nvmbddvv008835.bss.dev.jio.com:6667,nvmbddvv008836.bss.dev.jio.com:6667 --topic dap-st-recharge-exception --security-protocol SASL_PLAINTEXT
+
+
+/usr/hdp/current/kafka-broker/bin/kafka-console-producer.sh --broker-list nvmbdrpv000169.jiolabs.com:6667,nvmbdrpv000561.jiolabs.com:6667,nvmbdrpv000562.jiolabs.com:6667 --topic diplatform-v2 --security-protocol SASL_PLAINTEXT 
+
+./usr/hdp/current/kafka-broker/bin/kafka-console-consumer.sh --bootstrap-server nvmbdrpv000169.jiolabs.com:6667,nvmbdrpv000561.jiolabs.com:6667,nvmbdrpv000562.jiolabs.com:6667 --topic diplatform-v2 --security-protocol SASL_PLAINTEXT --from-beginning
+
+
+
+/usr/hdp/2.6.1.0-129/spark2/bin/spark-submit --verbose --class "com.jio.coe.jep.jpb.addmoney.DBToEsHiveHdfs" --name JPB-Addmoney --files /usr/hdp/current/spark2-client/conf/hive-site.xml --master yarn --deploy-mode cluster ./target/jpbAddmoney.jar $1 "hdfs://10.144.112.174:8020" $2 "hdfs" $3 "/config/bdplatform/" $4 "coe_spark_job_client_jpb_addmoney.properties" 
+
+select  t3.pstr3 as plan, t3.pstr6 as accountid, t3.pstr7 as accounttype, t2.processstate as processstate, t2.processtimestamp as processtimestamp, t3.pstr5 as transactiontimestamp from (select correlationid,max(processtimestamp) as time from dap_pmcevents where dashboard='recharge' and referenceno='BR856607360' group by correlationid) t1, (select referenceno, processstate, processtimestamp,correlationid from dap_pmcevents where dashboard='recharge' and referenceno='BR856607360') t2 , (select * from dap_pmcevents where dashboard='recharge' and referenceno='BR856607360' and sequence=4) t3 where t1.correlationid=t2.correlationid and t1.time=t2.processedtimestamp and t1.correlationid=t3.correlationid
+
+
+"payloadFields":["ns0:ChannelID","ns0:Circle","ns0:CustomerID","rec:ModeofPayment","ns0:ProductID","ns0:ServiceID","ns0:TransactionDateTime","pstr7","pstr8","pstr9","pstr10","pstr11","pstr12"]
+
+
+{
+"services":["BalanceManagement", "DigitalOrder"],
+"sequence":{
+"BalanceManagement_Proxy_Recharge":"1_recharge",
+"BalanceManagement_OrderValidation_Recharge":"2_recharge",
+"BalanceManagement_EwalletManagement_Recharge":"3_recharge",
+"BalanceManagement_CCI_Recharge":"4_recharge",
+"BalanceManagement_RoutingDataInquiry_Recharge":"5_recharge",
+"BalanceManagement_EstelCore_Recharge":"6_recharge",
+"BalanceManagement_Notification_Recharge":"7_recharge",
+"BalanceManagement_DigitalService_Recharge":"8_recharge"
+}
+"recharge":
+{
+"logFields":[],
+"sourceService":["DigitalOrder123"],
+"lastseq":[7, 8],
+"requiredseq":[1, 4, 7, 8],
+"parseseq":4,
+"parsePayloadType":"json",
+"payloadFields":["channelID","circleID","customerID","modeOfPayment","productID","serviceID","transDateTime","pstr7","pstr8","pstr9","pstr10","pstr11","pstr12"]
+
+}
+}
+
+
+
+
+
+
+
+
+{
+"services":["BalanceManagement", "DigitalOrder"],
+"sequence":{
+"BalanceManagement_Proxy_Recharge":"01_recharge",
+"BalanceManagement_OrderValidation_Recharge":"02_recharge",
+"BalanceManagement_EwalletManagement_Recharge":"03_recharge",
+"BalanceManagement_CCI_Recharge":"04_recharge",
+"BalanceManagement_RoutingDataInquiry_Recharge":"05_recharge",
+"BalanceManagement_EstelCore_Recharge":"06_recharge",
+"BalanceManagement_Notification_Recharge":"07_recharge",
+"BalanceManagement_DigitalService_Recharge":"08_recharge"
+}
+"recharge":
+{
+"logFields":[],
+"sourceService":["DigitalOrder123"],
+"lastseq":[7, 8],
+"requiredseq":[1, 4, 7, 8],
+"parseseq":4,
+"parsePayloadType":"json",
+"failed":"FAILED",
+"success":"COMPLETED",
+"payloadFieldsCount":6,
+"pstr1":"circleID",
+"pstr2":"customerID",
+"pstr3":"modeOfPayment",
+"pstr4":"productID",
+"pstr5":"serviceID",
+"pstr6":"transDateTime"
+}
+}
+
+
+select t2.interfaceid as processname, t2.processedtimestamp as activitytimestamp,t2.status as activitystate, t2.errorcode as errorcode, t2.sequence as sequence, t2.correlationid as correlationid, t2.transactionid as transactionid from (select correlationid,interfaceid, max(processedtimestamp) as processedtimestamp from st_logevents where dashboard LIKE 'recharge%' and transactionid='BR860756429' group by interfaceid,correlationid) t1, (select * from st_logevents where dashboard LIKE 'recharge%' and transactionid='BR860756429') t2 where t1.interfaceid=t2.interfaceid and t1.processedtimestamp=t2.processedtimestamp order by sequence
+exception query..select t2.interfaceid as processname, t2.processedtimestamp as activitytimestamp,t2.status as activitystate, t2.errorcode as errorcode, t2.sequence as sequence, t2.correlationid as correlationid, t2.transactionid as transactionid from (select max(processedtimestamp) as time from st_exceptionevents where dashboard LIKE 'recharge%' and transactionid='BR860756429' and unix_timestamp(processedtimestamp, 'yyyy-MM-dd HH:mm:ss.SSS') > unix_timestamp('2018-10-23 17:14:52.654', 'yyyy-MM-dd HH:mm:ss.SSS') ) t1, (select * from st_exceptionevents where dashboard LIKE 'recharge%' and transactionid='BR860756429'and unix_timestamp(processedtimestamp, 'yyyy-MM-dd HH:mm:ss.SSS') > unix_timestamp('2018-10-23 17:14:52.654', 'yyyy-MM-dd HH:mm:ss.SSS')) t2 where t1.time=t2.processedtimestamp
+
+
+select t2.interfaceid as processname, t2.processedtimestamp as activitytimestamp,t2.status as activitystate, t2.errorcode as errorcode, t2.sequence as sequence, t2.correlationid as correlationid, t2.transactionid as transactionid from (select max(processedtimestamp) as time from dap_logevents where dashboard LIKE 'recharge%' and transactionid='BR144661143' and unix_timestamp(processedtimestamp, 'yyyy-MM-dd HH:mm:ss.SSS') > unix_timestamp('2018-10-12 15:45:27.149', 'yyyy-MM-dd HH:mm:ss.SSS') ) t1, (select * from dap_logevents where dashboard LIKE 'recharge%' and transactionid='BR144661143'and unix_timestamp(processedtimestamp, 'yyyy-MM-dd HH:mm:ss.SSS') > unix_timestamp('2018-10-12 15:45:27.149', 'yyyy-MM-dd HH:mm:ss.SSS')) t2 where t1.time=t2.processedtimestamp
+
+
+java -Xms256m -Xmx1024m -Dsun.security.krb5.debug=true -Djava.security.auth.login.config=working_jass.conf -Dspring.config.location=application.properties -Djavax.security.auth.useSubjectCredsOnly=true -Djava.security.krb5.conf=/etc/krb5.conf -jar ProcessMonitoringAPI.jar
+
+
+P@ss0rd@123
+
+
+java -Xms256m -Xmx1024m -Dsun.security.krb5.debug=true -Djava.security.auth.login.config=working_jass.conf -Djavax.security.auth.useSubjectCredsOnly=true -Djava.security.krb5.conf=krb5.conf -jar processmonitoringapi-0.0.1-SNAPSHOT1.jar --spring.config.location=/home/tibusr/jep/bpc/application.properties
+
+use diplatform;
+drop table if exists rep_pmcevents_tmp;
+create table rep_pmcevents(channel STRING,correlationid STRING, dashboard STRING, errorcode STRING,eventtype STRING, interfaceid STRING,processedlogmessage STRING, processedpayload STRING, processstate STRING,processtimestamp TIMESTAMP, pstr0 STRING, pstr1 STRING, pstr2 STRING, pstr3 STRING, pstr4 STRING, pstr5 STRING, pstr6 STRING, pstr7 STRING, pstr8 STRING, pstr9 STRING,pstr10 STRING, pstr11 STRING, receivedlogmessage STRING, receivedpayload STRING, receivedtimestamp TIMESTAMP, referenceno STRING, replyqueue STRING, sequence INT,stacktrace STRING, str0 STRING,str1 STRING, str2 STRING) 
+PARTITIONED BY(processdate STRING)
+stored as orc;
+
+
+
+insert into diplatform.rep_pmcevents partition(processdate) select channel , correlationid , dashboard , errorcode , eventtype , interfaceid , processedlogmessage , processedpayload , processstate , processtimestamp , pstr0 , pstr1 , pstr2 , pstr3 , pstr4 , pstr5 , pstr6 , pstr7 , pstr8 , pstr9 , pstr10 , pstr11 , receivedlogmessage , receivedpayload , receivedtimestamp , referenceno , replyqueue , sequence , stacktrace , str0 , str1 , str2, processdate from rep_pmcevents_tmp; 
+
+ alter table rep_pmcevents partition(processdate='2019-09-19') concatenate;
+sit servers
+10.144.21.40
+10.144.21.38,39
+37,33,41,27,26,28
+
+hive.url=jdbc:hive2://nvmbddvv008830.bss.dev.jio.com:10000/diplatform;principal=hive/nvmbddvv008830.bss.dev.jio.com@DEVJEPRILBDP.COM;transportMode=http;httpPath=cliservice
+
+
+https://community.hortonworks.com/articles/50935/setup-cross-realm-trust-between-two-mit-kdc.html
+
+jdbc:hive2://zk=nvmbddvv008834.bss.dev.jio.com:2181,nvmbddvv008835.bss.dev.jio.com:2181,nvmbddvv008836.bss.dev.jio.com:2181/hiveserver2;principal=hive/nvmbddvv008830.bss.dev.jio.com@DEVJEPRILBDP.COM;
+
+
+conf.set("hadoop.security.authentication", "Kerberos");
+		UserGroupInformation.setConfiguration(conf);
+		UserGroupInformation.loginUserFromKeytab(dev_jep_diplatform@RJIL.RIL.COM, kerberosKeytab);
+		
+		"jdbc:hive2://nvmbddvv008830.bss.dev.jio.com:10000,nvmbddvv008831.bss.dev.jio.com:10000/diplatform;principal=hive/nvmbddvv008830.bss.dev.jio.com@DEVJEPRILBDP.COM;transportMode=http;httpPath=cliservice"
+
+		
+		"jdbc:hive2://nvmbddvv008834.bss.dev.jio.com:2181,nvmbddvv008835.bss.dev.jio.com:2181,nvmbddvv008836.bss.dev.jio.com:2181/diplatform;principal=hive/nvmbddvv008830.bss.dev.jio.com@DEVJEPRILBDP.COM;transportMode=http;httpPath=cliservice"
+		
+		 "jdbc:hive2://nvmbddvv008834.bss.dev.jio.com:2181,nvmbddvv008835.bss.dev.jio.com:2181,nvmbddvv008836.bss.dev.jio.com:2181/diplatform;principal=hive/nvmbddvv008830.bss.dev.jio.com@DEVJEPRILBDP.COM;tez.queue.name=tibco;serviceDiscoveryMode=zooKeeper;zooKeeperNamespace=hiveserver2"
+		 
+		 jdbc:hive2://nvmbddvv008834.bss.dev.jio.com:2181/diplatform;principal=hive/nvmbddvv008830.bss.dev.jio.com@DEVJEPRILBDP.COM;serviceDiscoveryMode=zooKeeper;zooKeeperNamespace=hiveserver2
+		 
+		 
+		 hive.url=jdbc:hive2://nvmbddvv008830.bss.dev.jio.com:10000/diplatform;principal=hive/nvmbddvv008830.bss.dev.jio.com@DEVJEPRILBDP.COM;
+		 
+		 
+		 
+		 
+		 
+		 spring.datasource.url=jdbc:hive2://nvmbddvv008830.bss.dev.jio.com:10000/diplatform;principal=hive/nvmbddvv008830.bss.dev.jio.com@DEVJEPRILBDP.COM;
+		 
+		 
+		 
+		 
